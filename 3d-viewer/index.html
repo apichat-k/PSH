@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>3D Viewer โครงการ</title>
+<style>
+  :root{
+    --bg:#eef2f5; --panel:rgba(255,255,255,.92); --ink:#14212b; --muted:#5b6b78;
+    --line:#d5dde3; --accent:#0a6ea8; --accent-ink:#fff;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --bg:#0f1a22; --panel:rgba(22,33,43,.92); --ink:#e8eef2; --muted:#9fb1bd; --line:#2c3f4d; --accent:#4db3ea; --accent-ink:#06202e; }
+  }
+  :root[data-theme="dark"]{ --bg:#0f1a22; --panel:rgba(22,33,43,.92); --ink:#e8eef2; --muted:#9fb1bd; --line:#2c3f4d; --accent:#4db3ea; --accent-ink:#06202e; }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Noto Sans Thai","Sarabun",system-ui,-apple-system,"Segoe UI",sans-serif}
+  #stage{position:fixed;inset:0}
+  canvas{display:block;width:100%;height:100%;touch-action:none;outline:none}
+  .panel{position:fixed;background:var(--panel);border:1px solid var(--line);border-radius:12px;backdrop-filter:blur(8px);box-shadow:0 4px 18px rgba(0,0,0,.12)}
+  #title{top:12px;left:12px;padding:10px 14px;max-width:calc(100vw - 24px)}
+  #title h1{margin:0;font-size:16px;font-weight:600}
+  #title p{margin:2px 0 0;font-size:12px;color:var(--muted)}
+  #views{left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom));display:flex;gap:6px;padding:6px;max-width:calc(100vw - 24px);overflow-x:auto}
+  button{font:inherit;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer;white-space:nowrap;min-height:40px}
+  button:hover{border-color:var(--accent)}
+  button[aria-pressed="true"],button.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  #tools{top:12px;right:12px;display:flex;flex-direction:column;gap:6px;padding:6px}
+  #info{right:12px;bottom:calc(72px + env(safe-area-inset-bottom));width:min(340px,calc(100vw - 24px));padding:14px 16px;display:none}
+  #info h2{margin:0 0 6px;font-size:15px}
+  #info p{margin:0;font-size:13px;line-height:1.55;color:var(--muted);white-space:pre-wrap}
+  #info .close{position:absolute;top:6px;right:6px;border:0;min-height:32px;padding:4px 10px}
+  #pick{left:12px;bottom:calc(72px + env(safe-area-inset-bottom));padding:10px 12px;font-size:12px;display:none;max-width:min(420px,calc(100vw - 24px))}
+  #pick code{display:block;margin:6px 0;padding:6px;background:rgba(127,127,127,.15);border-radius:6px;word-break:break-all;font-size:11.5px}
+  #loader{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:var(--bg);z-index:10;transition:opacity .4s}
+  #loader .bar{width:min(320px,70vw);height:8px;background:var(--line);border-radius:6px;overflow:hidden}
+  #loader .bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+  #loader small{color:var(--muted)}
+  .hs{position:fixed;left:0;top:0;width:28px;height:28px;margin:-14px 0 0 -14px;border-radius:50%;background:var(--accent);color:var(--accent-ink);border:2px solid #fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;padding:0;min-height:0;box-shadow:0 2px 8px rgba(0,0,0,.35);z-index:3}
+  .hs.hidden{display:none}
+  .hs span{pointer-events:none}
+  .hs .tip{position:absolute;left:34px;top:50%;transform:translateY(-50%);background:var(--panel);color:var(--ink);border:1px solid var(--line);padding:3px 8px;border-radius:6px;font-weight:500;font-size:12px;white-space:nowrap;display:none}
+  .hs:hover .tip{display:block}
+  #err{position:fixed;inset:auto 12px 12px 12px;padding:12px;background:#fff3f0;color:#7a1d0c;border:1px solid #e9a89b;border-radius:10px;display:none;z-index:20}
+  @media (max-width:560px){ #tools{top:auto;bottom:calc(72px + env(safe-area-inset-bottom));right:12px} #info{bottom:calc(128px + env(safe-area-inset-bottom))} }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+
+<div id="title" class="panel">
+  <h1 id="ttl">3D Viewer โครงการ</h1>
+  <p id="sub">ลาก = หมุน · ล้อเมาส์/บีบนิ้ว = ซูม · คลิกขวา/สองนิ้ว = เลื่อน</p>
+</div>
+
+<div id="tools" class="panel" role="toolbar" aria-label="เครื่องมือ">
+  <button id="bReset" title="กลับภาพรวม">ภาพรวม</button>
+  <button id="bRot" aria-pressed="false" title="หมุนอัตโนมัติ">หมุนอัตโนมัติ</button>
+  <button id="bHs" aria-pressed="true" title="แสดง/ซ่อนจุดอธิบาย">จุดอธิบาย</button>
+  <button id="bPick" aria-pressed="false" title="คลิกบนโมเดลเพื่ออ่านพิกัด (สำหรับผู้จัดทำ)">อ่านพิกัด</button>
+  <button id="bFull" title="เต็มจอ">เต็มจอ</button>
+</div>
+
+<div id="views" class="panel" role="toolbar" aria-label="มุมมองที่กำหนดไว้"></div>
+<div id="info" class="panel" role="dialog" aria-live="polite"><button class="close" id="iClose" aria-label="ปิด">✕</button><h2 id="iT"></h2><p id="iD"></p></div>
+<div id="pick" class="panel"></div>
+
+<div id="loader"><div>กำลังโหลดโมเดล 3 มิติ…</div><div class="bar"><i id="lp"></i></div><small id="lt">0%</small></div>
+<div id="err"></div>
+
+<script type="importmap">
+{"imports":{"three":"./lib/three.module.js","three/addons/":"./lib/addons/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from './lib/addons/OrbitControls.js';
+import {GLTFLoader} from './lib/addons/GLTFLoader.js';
+import {MeshoptDecoder} from './lib/addons/meshopt_decoder.module.js';
+
+/* ===== ตั้งค่า (แก้ได้ที่นี่) ===== */
+const CONFIG = {
+  model: './model.glb',            // ชื่อไฟล์โมเดล
+  title: '3D Viewer โครงการ',
+  subtitle: 'ลาก = หมุน · ล้อเมาส์/บีบนิ้ว = ซูม · คลิกขวา/สองนิ้ว = เลื่อน',
+  viewpoints: './viewpoints.json', // มุมกล้องที่กำหนดไว้ (ได้จาก Scene ของ SketchUp)
+  hotspots: './hotspots.json',     // จุดอธิบาย
+};
+/* ================================== */
+
+const $ = id => document.getElementById(id);
+$('ttl').textContent = CONFIG.title; $('sub').textContent = CONFIG.subtitle; document.title = CONFIG.title;
+const showErr = m => { const e=$('err'); e.textContent=m; e.style.display='block'; };
+
+const stage = $('stage');
+const renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const sky = new THREE.Color(0xcfe3f1);
+scene.background = sky;
+const camera = new THREE.PerspectiveCamera(40, 1, 2, 60000);
+camera.position.set(-1500, 2700, 2800);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = .08;
+controls.maxPolarAngle = Math.PI * .495;   // ไม่ให้กล้องลอดใต้พื้น
+controls.screenSpacePanning = false;
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8a80, 1.6));
+const sun = new THREE.DirectionalLight(0xffffff, 1.4); sun.position.set(-1500, 3000, 1500); scene.add(sun);
+
+function resize(){ const w=innerWidth,h=innerHeight; renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+
+/* ---- viewpoints ---- */
+let VPS = [];
+let anim = null;
+function flyTo(p, dur=1200){
+  const from = {pos:camera.position.clone(), tgt:controls.target.clone()};
+  const to = {pos:new THREE.Vector3(...p.position), tgt:new THREE.Vector3(...p.target)};
+  anim = {from,to,t0:performance.now(),dur};
+}
+function stepAnim(now){
+  if(!anim) return;
+  let k = Math.min(1,(now-anim.t0)/anim.dur); k = k<.5 ? 2*k*k : 1-Math.pow(-2*k+2,2)/2;
+  camera.position.lerpVectors(anim.from.pos, anim.to.pos, k);
+  controls.target.lerpVectors(anim.from.tgt, anim.to.tgt, k);
+  if(k>=1) anim=null;
+}
+async function loadViewpoints(){
+  try{
+    const r = await fetch(CONFIG.viewpoints); if(!r.ok) return;
+    const raw = await r.json(); const seen = new Set();
+    VPS = raw.filter(v => { const k=v.position.join()+v.target.join(); if(seen.has(k)) return false; seen.add(k); return true; });
+  }catch(e){}
+  const box = $('views'); box.innerHTML='';
+  VPS.forEach((v,i)=>{ const b=document.createElement('button'); b.textContent=v.label||('มุมมอง '+(i+1));
+    b.onclick=()=>{ [...box.children].forEach(c=>c.classList.remove('active')); b.classList.add('active'); flyTo(v); closeInfo(); };
+    box.appendChild(b); });
+  if(!VPS.length) box.style.display='none';
+}
+
+/* ---- hotspots ---- */
+const hsEls = []; let hsVisible = true;
+async function loadHotspots(){
+  try{
+    const r = await fetch(CONFIG.hotspots); if(!r.ok) return;
+    const list = await r.json();
+    list.forEach((h,i)=>{
+      const el=document.createElement('button'); el.className='hs'; el.setAttribute('aria-label',h.title);
+      el.innerHTML='<span>'+(h.number||i+1)+'</span><div class="tip"></div>'; el.querySelector('.tip').textContent=h.title;
+      el.onclick=()=>{ openInfo(h); if(h.view) flyTo(h.view); };
+      document.body.appendChild(el); hsEls.push({el,pos:new THREE.Vector3(...h.position)});
+    });
+  }catch(e){}
+  if(!hsEls.length) $('bHs').style.display='none';
+}
+const v3 = new THREE.Vector3();
+function updateHotspots(){
+  if(!hsEls.length) return;
+  for(const h of hsEls){
+    v3.copy(h.pos).project(camera);
+    const vis = hsVisible && v3.z<1 && Math.abs(v3.x)<1.05 && Math.abs(v3.y)<1.05;
+    h.el.classList.toggle('hidden', !vis);
+    if(vis) h.el.style.transform=`translate(${(v3.x*.5+.5)*innerWidth}px,${(-v3.y*.5+.5)*innerHeight}px)`;
+  }
+}
+function openInfo(h){ $('iT').textContent=h.title; $('iD').textContent=h.description||''; $('info').style.display='block'; }
+function closeInfo(){ $('info').style.display='none'; }
+$('iClose').onclick = closeInfo;
+
+/* ---- toolbar ---- */
+let home = null;
+$('bReset').onclick = () => { if(home) flyTo(home); closeInfo(); };
+$('bRot').onclick = e => { controls.autoRotate=!controls.autoRotate; controls.autoRotateSpeed=.6; e.currentTarget.setAttribute('aria-pressed',controls.autoRotate); };
+$('bHs').onclick = e => { hsVisible=!hsVisible; e.currentTarget.setAttribute('aria-pressed',hsVisible); };
+$('bFull').onclick = () => { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.(); };
+let pickMode=false;
+$('bPick').onclick = e => { pickMode=!pickMode; e.currentTarget.setAttribute('aria-pressed',pickMode);
+  const p=$('pick'); p.style.display=pickMode?'block':'none'; p.textContent='คลิกบนโมเดลเพื่ออ่านพิกัด (ใช้กำหนดตำแหน่งจุดอธิบายใน hotspots.json)'; };
+
+/* ---- picking ---- */
+const ray = new THREE.Raycaster(); const ndc = new THREE.Vector2(); let model=null, downAt=null;
+renderer.domElement.addEventListener('pointerdown', e => downAt={x:e.clientX,y:e.clientY});
+renderer.domElement.addEventListener('pointerup', e => {
+  if(!pickMode||!model||!downAt) return;
+  if(Math.hypot(e.clientX-downAt.x,e.clientY-downAt.y)>5) return;
+  ndc.set(e.clientX/innerWidth*2-1, -(e.clientY/innerHeight)*2+1);
+  ray.setFromCamera(ndc,camera);
+  const hit = ray.intersectObject(model,true)[0];
+  const p=$('pick');
+  if(!hit){ p.textContent='ไม่พบพื้นผิวที่จุดนี้'; return; }
+  const q=hit.point.toArray().map(n=>+n.toFixed(1));
+  const snippet=`{ "title": "ชื่อจุด", "description": "คำอธิบาย", "position": [${q.join(', ')}] }`;
+  p.innerHTML='พิกัด (เมตร): <b>'+q.join(', ')+'</b><code></code><button id="cp">คัดลอก JSON</button>';
+  p.querySelector('code').textContent=snippet;
+  p.querySelector('#cp').onclick=()=>navigator.clipboard?.writeText(snippet);
+});
+
+/* ---- load model ---- */
+const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
+loader.load(CONFIG.model, gltf => {
+  model = gltf.scene;
+  model.traverse(o => { if(o.isMesh){ o.frustumCulled = true; const ms=[].concat(o.material);
+    ms.forEach(m=>{ m.metalness=0; m.roughness=1; if(m.map) m.map.anisotropy=4; }); }});
+  scene.add(model);
+  const box = new THREE.Box3().setFromObject(model);
+  const size = box.getSize(new THREE.Vector3()); console.log('model size (m)', size.toArray());
+  loadViewpoints().then(()=>{
+    home = VPS.find(v=>/Last_Saved|ล่าสุด/.test(v.id||v.label)) || VPS[0] || {position:[-1500,2700,2800],target:[0,0,0]};
+    camera.position.set(...home.position); controls.target.set(...home.target); controls.update();
+  });
+  loadHotspots();
+  const l=$('loader'); l.style.opacity=0; setTimeout(()=>l.remove(),450);
+}, xhr => {
+  if(xhr.total){ const p=Math.round(xhr.loaded/xhr.total*100); $('lp').style.width=p+'%'; $('lt').textContent=p+'%  ('+(xhr.loaded/1048576).toFixed(0)+' / '+(xhr.total/1048576).toFixed(0)+' MB)'; }
+  else $('lt').textContent=(xhr.loaded/1048576).toFixed(0)+' MB';
+}, err => { console.error(err); $('loader').remove();
+  showErr('โหลดโมเดลไม่สำเร็จ: เปิดหน้านี้ผ่านเว็บเซิร์ฟเวอร์ (ไม่ใช่ดับเบิลคลิกไฟล์) และตรวจว่ามีไฟล์ model.glb อยู่โฟลเดอร์เดียวกัน'); });
+
+renderer.setAnimationLoop(now => { stepAnim(now); controls.update(); renderer.render(scene,camera); updateHotspots(); });
+window.__ready = () => !!model;
+window.__flyTo = i => { camera.position.set(...VPS[i].position); controls.target.set(...VPS[i].target); controls.update(); };
+</script>
+</body>
+</html>
