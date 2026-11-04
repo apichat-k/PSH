@@ -1,5 +1,19 @@
 [
  {
+  "id": "overview",
+  "label": "ภาพรวมโครงการ",
+  "position": [
+   -420,
+   3300,
+   2750
+  ],
+  "target": [
+   -420,
+   950,
+   -80
+  ]
+ },
+ {
   "id": "Last_Saved_SketchUp_View",
   "label": "มุมมองล่าสุด",
   "position": [

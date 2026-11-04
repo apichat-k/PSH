@@ -6,44 +6,80 @@
 <title>3D Viewer โครงการ</title>
 <style>
   :root{
-    --bg:#eef2f5; --panel:rgba(255,255,255,.92); --ink:#14212b; --muted:#5b6b78;
-    --line:#d5dde3; --accent:#0a6ea8; --accent-ink:#fff;
+    --bg:#eef2f5; --panel:rgba(255,255,255,.94); --ink:#14212b; --muted:#566673;
+    --line:#d5dde3; --accent:#0b4f9c; --accent-ink:#fff; --new:#0b4f9c; --ring:#f4c430;
   }
   @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){ --bg:#0f1a22; --panel:rgba(22,33,43,.92); --ink:#e8eef2; --muted:#9fb1bd; --line:#2c3f4d; --accent:#4db3ea; --accent-ink:#06202e; }
+    :root:not([data-theme="light"]){ --bg:#0f1a22; --panel:rgba(20,31,41,.94); --ink:#e8eef2; --muted:#a3b4bf; --line:#2c3f4d; --accent:#5aa9f0; --accent-ink:#06202e; }
   }
-  :root[data-theme="dark"]{ --bg:#0f1a22; --panel:rgba(22,33,43,.92); --ink:#e8eef2; --muted:#9fb1bd; --line:#2c3f4d; --accent:#4db3ea; --accent-ink:#06202e; }
+  :root[data-theme="dark"]{ --bg:#0f1a22; --panel:rgba(20,31,41,.94); --ink:#e8eef2; --muted:#a3b4bf; --line:#2c3f4d; --accent:#5aa9f0; --accent-ink:#06202e; }
   *{box-sizing:border-box}
-  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:"Noto Sans Thai","Sarabun",system-ui,-apple-system,"Segoe UI",sans-serif}
+  html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:"Noto Sans Thai","Sarabun",system-ui,-apple-system,"Segoe UI",sans-serif}
   #stage{position:fixed;inset:0}
   canvas{display:block;width:100%;height:100%;touch-action:none;outline:none}
   .panel{position:fixed;background:var(--panel);border:1px solid var(--line);border-radius:12px;backdrop-filter:blur(8px);box-shadow:0 4px 18px rgba(0,0,0,.12)}
-  #title{top:12px;left:12px;padding:10px 14px;max-width:calc(100vw - 24px)}
-  #title h1{margin:0;font-size:16px;font-weight:600}
+  #title{top:12px;left:12px;padding:10px 14px;max-width:min(420px,calc(100vw - 24px));z-index:4}
+  #title h1{margin:0;font-size:16px;font-weight:600;line-height:1.35}
   #title p{margin:2px 0 0;font-size:12px;color:var(--muted)}
-  #views{left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom));display:flex;gap:6px;padding:6px;max-width:calc(100vw - 24px);overflow-x:auto}
+  #views{left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom));display:flex;gap:6px;padding:6px;max-width:calc(100vw - 24px);overflow-x:auto;z-index:4}
   button{font:inherit;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer;white-space:nowrap;min-height:40px}
   button:hover{border-color:var(--accent)}
   button[aria-pressed="true"],button.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
   button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  #tools{top:12px;right:12px;display:flex;flex-direction:column;gap:6px;padding:6px}
-  #info{right:12px;bottom:calc(72px + env(safe-area-inset-bottom));width:min(340px,calc(100vw - 24px));padding:14px 16px;display:none}
-  #info h2{margin:0 0 6px;font-size:15px}
-  #info p{margin:0;font-size:13px;line-height:1.55;color:var(--muted);white-space:pre-wrap}
-  #info .close{position:absolute;top:6px;right:6px;border:0;min-height:32px;padding:4px 10px}
-  #pick{left:12px;bottom:calc(72px + env(safe-area-inset-bottom));padding:10px 12px;font-size:12px;display:none;max-width:min(420px,calc(100vw - 24px))}
-  #pick code{display:block;margin:6px 0;padding:6px;background:rgba(127,127,127,.15);border-radius:6px;word-break:break-all;font-size:11.5px}
+  #tools{top:12px;right:12px;display:flex;flex-direction:column;gap:6px;padding:6px;z-index:4}
+
+  /* รายการส่วนประกอบโครงการ */
+  #list{top:96px;left:12px;width:270px;max-height:calc(100vh - 190px);overflow:auto;padding:8px;z-index:4}
+  #list h2{margin:4px 6px 8px;font-size:13px;font-weight:600;color:var(--muted)}
+  #list ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+  #list li button{width:100%;text-align:left;display:flex;align-items:center;gap:10px;border:0;padding:6px 8px;white-space:normal;min-height:38px}
+  #list li button:hover{background:rgba(127,127,127,.12)}
+  #list li button.active{background:var(--accent);color:var(--accent-ink)}
+  .num{flex:none;width:24px;height:24px;border-radius:50%;background:var(--new);color:#fff;border:2px solid var(--ring);font-weight:700;font-size:12px;display:inline-flex;align-items:center;justify-content:center}
+  #list li button.active .num{border-color:#fff}
+
+  /* การ์ดรายละเอียด */
+  #info{right:12px;bottom:calc(72px + env(safe-area-inset-bottom));width:min(380px,calc(100vw - 24px));padding:16px 16px 12px;display:none;z-index:5}
+  #info .head{display:flex;align-items:flex-start;gap:10px;padding-right:30px}
+  #info .head .num{width:30px;height:30px;font-size:14px}
+  #info h2{margin:2px 0 0;font-size:16px;line-height:1.35}
+  .chip{display:inline-block;margin-top:4px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:rgba(11,79,156,.12);color:var(--accent);border:1px solid rgba(11,79,156,.35)}
+  #info p{margin:10px 0 0;font-size:13.5px;line-height:1.65}
+  #info ul{margin:8px 0 0;padding-left:18px;font-size:13px;line-height:1.6;color:var(--muted)}
+  #info .close{position:absolute;top:8px;right:8px;border:0;min-height:32px;padding:4px 10px}
+  #info .nav{display:flex;justify-content:space-between;gap:8px;margin-top:12px}
+  #info .nav button{flex:1;min-height:36px;padding:6px 10px}
+  #info small{display:block;margin-top:10px;font-size:11px;color:var(--muted)}
+
   #loader{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:var(--bg);z-index:10;transition:opacity .4s}
   #loader .bar{width:min(320px,70vw);height:8px;background:var(--line);border-radius:6px;overflow:hidden}
   #loader .bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
   #loader small{color:var(--muted)}
-  .hs{position:fixed;left:0;top:0;width:28px;height:28px;margin:-14px 0 0 -14px;border-radius:50%;background:var(--accent);color:var(--accent-ink);border:2px solid #fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;padding:0;min-height:0;box-shadow:0 2px 8px rgba(0,0,0,.35);z-index:3}
+
+  /* จุดบนโมเดล */
+  .hs{position:fixed;left:0;top:0;display:flex;align-items:center;gap:6px;padding:0;margin:0;border:0;min-height:0;background:none;z-index:3;transform-origin:0 0;cursor:pointer}
+  .hs .num{width:28px;height:28px;margin:-14px 0 0 -14px;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+  .hs .lbl{margin-top:-14px;background:var(--new);color:#fff;font-size:12.5px;font-weight:500;padding:3px 9px;border-radius:999px;border:2px solid var(--ring);white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+  .hs.active .num{background:var(--ring);color:#14212b;border-color:#fff;transform:scale(1.15)}
+  .hs.active .lbl{background:var(--ring);color:#14212b;border-color:#fff}
   .hs.hidden{display:none}
-  .hs span{pointer-events:none}
-  .hs .tip{position:absolute;left:34px;top:50%;transform:translateY(-50%);background:var(--panel);color:var(--ink);border:1px solid var(--line);padding:3px 8px;border-radius:6px;font-weight:500;font-size:12px;white-space:nowrap;display:none}
-  .hs:hover .tip{display:block}
+  .hs.flip .lbl{position:absolute;right:36px;top:0}
+  .hs:focus-visible{outline:none}
+  .hs:focus-visible .num{outline:2px solid #fff;outline-offset:2px}
+  body.compact .hs .lbl{display:none}
+
   #err{position:fixed;inset:auto 12px 12px 12px;padding:12px;background:#fff3f0;color:#7a1d0c;border:1px solid #e9a89b;border-radius:10px;display:none;z-index:20}
-  @media (max-width:560px){ #tools{top:auto;bottom:calc(72px + env(safe-area-inset-bottom));right:12px} #info{bottom:calc(128px + env(safe-area-inset-bottom))} }
+  .is-off{display:none!important}
+
+  @media (max-width:760px){
+    #list{display:none}
+    #tools{top:84px;bottom:auto;right:12px;left:12px;flex-direction:row;flex-wrap:wrap;justify-content:flex-start}
+    #tools button{min-height:36px;padding:6px 10px;font-size:13px}
+    #info{left:12px;right:12px;width:auto;bottom:calc(72px + env(safe-area-inset-bottom));max-height:40vh;overflow:auto}
+    #title{right:12px}
+    #title h1{font-size:13.5px}
+    #title p{display:none}
+  }
 </style>
 </head>
 <body>
@@ -51,20 +87,31 @@
 
 <div id="title" class="panel">
   <h1 id="ttl">3D Viewer โครงการ</h1>
-  <p id="sub">ลาก = หมุน · ล้อเมาส์/บีบนิ้ว = ซูม · คลิกขวา/สองนิ้ว = เลื่อน</p>
+  <p id="sub"></p>
 </div>
 
 <div id="tools" class="panel" role="toolbar" aria-label="เครื่องมือ">
+  <button id="bDet" aria-pressed="true" title="เปิด/ปิดการแสดงรายละเอียดโครงการ">รายละเอียดโครงการ: เปิด</button>
   <button id="bReset" title="กลับภาพรวม">ภาพรวม</button>
   <button id="bRot" aria-pressed="false" title="หมุนอัตโนมัติ">หมุนอัตโนมัติ</button>
-  <button id="bHs" aria-pressed="true" title="แสดง/ซ่อนจุดอธิบาย">จุดอธิบาย</button>
-  <button id="bPick" aria-pressed="false" title="คลิกบนโมเดลเพื่ออ่านพิกัด (สำหรับผู้จัดทำ)">อ่านพิกัด</button>
   <button id="bFull" title="เต็มจอ">เต็มจอ</button>
 </div>
 
+<nav id="list" class="panel" aria-label="ส่วนประกอบโครงการ">
+  <h2>ส่วนประกอบโครงการ (คลิกเพื่อดูรายละเอียด)</h2>
+  <ol id="listItems"></ol>
+</nav>
+
 <div id="views" class="panel" role="toolbar" aria-label="มุมมองที่กำหนดไว้"></div>
-<div id="info" class="panel" role="dialog" aria-live="polite"><button class="close" id="iClose" aria-label="ปิด">✕</button><h2 id="iT"></h2><p id="iD"></p></div>
-<div id="pick" class="panel"></div>
+
+<div id="info" class="panel" role="dialog" aria-live="polite" aria-labelledby="iT">
+  <button class="close" id="iClose" aria-label="ปิด">✕</button>
+  <div class="head"><span class="num" id="iN"></span><div><h2 id="iT"></h2><span class="chip" id="iS"></span></div></div>
+  <p id="iD"></p>
+  <ul id="iL"></ul>
+  <div class="nav"><button id="iPrev">‹ ก่อนหน้า</button><button id="iNext">ถัดไป ›</button></div>
+  <small id="iSrc"></small>
+</div>
 
 <div id="loader"><div>กำลังโหลดโมเดล 3 มิติ…</div><div class="bar"><i id="lp"></i></div><small id="lt">0%</small></div>
 <div id="err"></div>
@@ -80,47 +127,53 @@ import {MeshoptDecoder} from './lib/addons/meshopt_decoder.module.js';
 
 /* ===== ตั้งค่า (แก้ได้ที่นี่) ===== */
 const CONFIG = {
-  model: './model.glb',            // ชื่อไฟล์โมเดล
-  title: '3D Viewer โครงการ',
+  model: './model.glb',
+  title: 'โครงการโรงไฟฟ้าพลังน้ำแบบสูบกลับ เขื่อนวชิราลงกรณ',
   subtitle: 'ลาก = หมุน · ล้อเมาส์/บีบนิ้ว = ซูม · คลิกขวา/สองนิ้ว = เลื่อน',
-  viewpoints: './viewpoints.json', // มุมกล้องที่กำหนดไว้ (ได้จาก Scene ของ SketchUp)
-  hotspots: './hotspots.json',     // จุดอธิบาย
+  viewpoints: './viewpoints.json',  // มุมกล้อง
+  hotspots: './hotspots.json',      // รายละเอียดส่วนประกอบโครงการ
+  source: 'ที่มา: เอกสารลักษณะโครงการ (1/3) ฉบับร่าง',
+  showDetails: true,                // เปิดรายละเอียดโครงการเมื่อเริ่มต้น
 };
 /* ================================== */
 
 const $ = id => document.getElementById(id);
 $('ttl').textContent = CONFIG.title; $('sub').textContent = CONFIG.subtitle; document.title = CONFIG.title;
+let current = -1;   // ส่วนประกอบที่เลือกอยู่
 const showErr = m => { const e=$('err'); e.textContent=m; e.style.display='block'; };
 
-const stage = $('stage');
 const renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-stage.appendChild(renderer.domElement);
+$('stage').appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-const sky = new THREE.Color(0xcfe3f1);
-scene.background = sky;
+scene.background = new THREE.Color(0xcfe3f1);
 const camera = new THREE.PerspectiveCamera(40, 1, 2, 60000);
-camera.position.set(-1500, 2700, 2800);
+camera.position.set(-420, 3300, 2750);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; controls.dampingFactor = .08;
-controls.maxPolarAngle = Math.PI * .495;   // ไม่ให้กล้องลอดใต้พื้น
-controls.screenSpacePanning = false;
+controls.maxPolarAngle = Math.PI * .495;
+controls.target.set(-420, 950, -80);
 
 scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8a80, 1.6));
 const sun = new THREE.DirectionalLight(0xffffff, 1.4); sun.position.set(-1500, 3000, 1500); scene.add(sun);
 
-function resize(){ const w=innerWidth,h=innerHeight; renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix(); }
+function resize(){ const w=innerWidth,h=innerHeight; renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix(); updateOffset(); }
+// บนจอแคบ เมื่อเปิดการ์ด ให้เลื่อนภาพขึ้นเพื่อไม่ให้การ์ดบังส่วนที่เลือก
+function updateOffset(){
+  const w=innerWidth,h=innerHeight;
+  if(current>=0 && matchMedia('(max-width:760px)').matches) camera.setViewOffset(w,h,0,Math.round(h*.22),w,h);
+  else camera.clearViewOffset();
+}
 addEventListener('resize', resize); resize();
 
-/* ---- viewpoints ---- */
-let VPS = [];
+/* ---- การเคลื่อนกล้อง ---- */
 let anim = null;
-function flyTo(p, dur=1200){
-  const from = {pos:camera.position.clone(), tgt:controls.target.clone()};
-  const to = {pos:new THREE.Vector3(...p.position), tgt:new THREE.Vector3(...p.target)};
-  anim = {from,to,t0:performance.now(),dur};
+function flyTo(p, dur=1300){
+  controls.autoRotate=false; $('bRot').setAttribute('aria-pressed','false');
+  anim = {from:{pos:camera.position.clone(), tgt:controls.target.clone()},
+          to:{pos:new THREE.Vector3(...p.position), tgt:new THREE.Vector3(...p.target)}, t0:performance.now(), dur};
 }
 function stepAnim(now){
   if(!anim) return;
@@ -129,88 +182,123 @@ function stepAnim(now){
   controls.target.lerpVectors(anim.from.tgt, anim.to.tgt, k);
   if(k>=1) anim=null;
 }
+controls.addEventListener('start', ()=>{ anim=null; });
+
+/* จอแนวตั้ง (มือถือ) ถอยกล้องออกให้เห็นภาพรวมครบ */
+function fit(v){
+  const a=innerWidth/innerHeight; if(a>=1) return v;
+  const k=Math.min(2.2,.85/a), p=v.position.map((x,i)=>v.target[i]+(x-v.target[i])*k);
+  return {position:p,target:v.target};
+}
+
+/* ---- มุมมอง ---- */
+let VPS = [], home = null;
 async function loadViewpoints(){
   try{
-    const r = await fetch(CONFIG.viewpoints); if(!r.ok) return;
-    const raw = await r.json(); const seen = new Set();
-    VPS = raw.filter(v => { const k=v.position.join()+v.target.join(); if(seen.has(k)) return false; seen.add(k); return true; });
+    const r = await fetch(CONFIG.viewpoints); if(r.ok){
+      const raw = await r.json(); const seen = new Set();
+      VPS = raw.filter(v => { const k=v.position.join()+v.target.join(); if(seen.has(k)) return false; seen.add(k); return true; });
+    }
   }catch(e){}
   const box = $('views'); box.innerHTML='';
   VPS.forEach((v,i)=>{ const b=document.createElement('button'); b.textContent=v.label||('มุมมอง '+(i+1));
-    b.onclick=()=>{ [...box.children].forEach(c=>c.classList.remove('active')); b.classList.add('active'); flyTo(v); closeInfo(); };
+    b.onclick=()=>{ setActiveView(b); flyTo(v.id==='overview'?fit(v):v); closeInfo(); };
     box.appendChild(b); });
   if(!VPS.length) box.style.display='none';
+  home = VPS.find(v=>v.id==='overview') || VPS[0] || {position:[-420,3300,2750],target:[-420,950,-80]};
 }
+function setActiveView(b){ [...$('views').children].forEach(c=>c.classList.toggle('active', c===b)); }
 
-/* ---- hotspots ---- */
-const hsEls = []; let hsVisible = true;
+/* ---- รายละเอียดโครงการ ---- */
+let HS = [], detailsOn = CONFIG.showDetails;
 async function loadHotspots(){
-  try{
-    const r = await fetch(CONFIG.hotspots); if(!r.ok) return;
-    const list = await r.json();
-    list.forEach((h,i)=>{
-      const el=document.createElement('button'); el.className='hs'; el.setAttribute('aria-label',h.title);
-      el.innerHTML='<span>'+(h.number||i+1)+'</span><div class="tip"></div>'; el.querySelector('.tip').textContent=h.title;
-      el.onclick=()=>{ openInfo(h); if(h.view) flyTo(h.view); };
-      document.body.appendChild(el); hsEls.push({el,pos:new THREE.Vector3(...h.position)});
-    });
-  }catch(e){}
-  if(!hsEls.length) $('bHs').style.display='none';
+  try{ const r = await fetch(CONFIG.hotspots); if(r.ok) HS = await r.json(); }catch(e){}
+  const ol = $('listItems');
+  HS.forEach((h,i)=>{
+    h.num = h.number ?? (i+1);
+    h.vec = new THREE.Vector3(...h.position);
+    const el=document.createElement('button'); el.className='hs'; el.type='button';
+    el.setAttribute('aria-label', h.num+'. '+h.title);
+    el.innerHTML='<span class="num"></span><span class="lbl"></span>';
+    el.querySelector('.num').textContent=h.num; el.querySelector('.lbl').textContent=h.num+'. '+h.title;
+    el.onclick=()=>select(i);
+    document.body.appendChild(el); h.el=el;
+    const li=document.createElement('li'); const b=document.createElement('button');
+    b.innerHTML='<span class="num"></span><span></span>'; b.querySelector('.num').textContent=h.num; b.lastChild.textContent=h.title;
+    b.onclick=()=>select(i); li.appendChild(b); ol.appendChild(li); h.li=b;
+  });
+  if(!HS.length){ $('bDet').style.display='none'; detailsOn=false; }
+  applyDetails();
 }
-const v3 = new THREE.Vector3();
-function updateHotspots(){
-  if(!hsEls.length) return;
-  for(const h of hsEls){
-    v3.copy(h.pos).project(camera);
-    const vis = hsVisible && v3.z<1 && Math.abs(v3.x)<1.05 && Math.abs(v3.y)<1.05;
-    h.el.classList.toggle('hidden', !vis);
-    if(vis) h.el.style.transform=`translate(${(v3.x*.5+.5)*innerWidth}px,${(-v3.y*.5+.5)*innerHeight}px)`;
-  }
+function select(i){
+  const h=HS[i]; if(!h) return; current=i;
+  HS.forEach((x,j)=>{ x.el.classList.toggle('active',j===i); x.li.classList.toggle('active',j===i); });
+  $('iN').textContent=h.num; $('iT').textContent=h.title;
+  $('iS').textContent=h.status||''; $('iS').style.display=h.status?'':'none';
+  $('iD').textContent=h.description||'';
+  const ul=$('iL'); ul.innerHTML=''; (h.details||[]).forEach(t=>{ const li=document.createElement('li'); li.textContent=t; ul.appendChild(li); });
+  ul.style.display=(h.details&&h.details.length)?'':'none';
+  $('iSrc').textContent=CONFIG.source||'';
+  $('iPrev').disabled = i===0; $('iNext').disabled = i===HS.length-1;
+  $('info').style.display='block';
+  updateOffset();
+  setActiveView(null);
+  if(h.view) flyTo(h.view);
 }
-function openInfo(h){ $('iT').textContent=h.title; $('iD').textContent=h.description||''; $('info').style.display='block'; }
-function closeInfo(){ $('info').style.display='none'; }
+function closeInfo(){
+  $('info').style.display='none'; current=-1; updateOffset();
+  HS.forEach(x=>{ x.el.classList.remove('active'); x.li.classList.remove('active'); });
+}
 $('iClose').onclick = closeInfo;
-
-/* ---- toolbar ---- */
-let home = null;
-$('bReset').onclick = () => { if(home) flyTo(home); closeInfo(); };
-$('bRot').onclick = e => { controls.autoRotate=!controls.autoRotate; controls.autoRotateSpeed=.6; e.currentTarget.setAttribute('aria-pressed',controls.autoRotate); };
-$('bHs').onclick = e => { hsVisible=!hsVisible; e.currentTarget.setAttribute('aria-pressed',hsVisible); };
-$('bFull').onclick = () => { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.(); };
-let pickMode=false;
-$('bPick').onclick = e => { pickMode=!pickMode; e.currentTarget.setAttribute('aria-pressed',pickMode);
-  const p=$('pick'); p.style.display=pickMode?'block':'none'; p.textContent='คลิกบนโมเดลเพื่ออ่านพิกัด (ใช้กำหนดตำแหน่งจุดอธิบายใน hotspots.json)'; };
-
-/* ---- picking ---- */
-const ray = new THREE.Raycaster(); const ndc = new THREE.Vector2(); let model=null, downAt=null;
-renderer.domElement.addEventListener('pointerdown', e => downAt={x:e.clientX,y:e.clientY});
-renderer.domElement.addEventListener('pointerup', e => {
-  if(!pickMode||!model||!downAt) return;
-  if(Math.hypot(e.clientX-downAt.x,e.clientY-downAt.y)>5) return;
-  ndc.set(e.clientX/innerWidth*2-1, -(e.clientY/innerHeight)*2+1);
-  ray.setFromCamera(ndc,camera);
-  const hit = ray.intersectObject(model,true)[0];
-  const p=$('pick');
-  if(!hit){ p.textContent='ไม่พบพื้นผิวที่จุดนี้'; return; }
-  const q=hit.point.toArray().map(n=>+n.toFixed(1));
-  const snippet=`{ "title": "ชื่อจุด", "description": "คำอธิบาย", "position": [${q.join(', ')}] }`;
-  p.innerHTML='พิกัด (เมตร): <b>'+q.join(', ')+'</b><code></code><button id="cp">คัดลอก JSON</button>';
-  p.querySelector('code').textContent=snippet;
-  p.querySelector('#cp').onclick=()=>navigator.clipboard?.writeText(snippet);
+$('iPrev').onclick = () => select(current-1);
+$('iNext').onclick = () => select(current+1);
+addEventListener('keydown', e => {
+  if(e.key==='Escape') closeInfo();
+  if(current>=0 && e.key==='ArrowRight') select(Math.min(HS.length-1,current+1));
+  if(current>=0 && e.key==='ArrowLeft') select(Math.max(0,current-1));
 });
 
-/* ---- load model ---- */
+function applyDetails(){
+  const b=$('bDet'); b.setAttribute('aria-pressed', detailsOn);
+  b.textContent = 'รายละเอียดโครงการ: ' + (detailsOn ? 'เปิด' : 'ปิด');
+  $('list').classList.toggle('is-off', !detailsOn);
+  if(!detailsOn) closeInfo();
+}
+$('bDet').onclick = () => { detailsOn=!detailsOn; applyDetails(); };
+
+const v3 = new THREE.Vector3();
+function updateHotspots(){
+  if(!HS.length) return;
+  for(const h of HS){
+    v3.copy(h.vec).project(camera);
+    const vis = detailsOn && v3.z<1 && Math.abs(v3.x)<1.1 && Math.abs(v3.y)<1.1;
+    h.el.classList.toggle('hidden', !vis);
+    if(!vis) continue;
+    const sx=(v3.x*.5+.5)*innerWidth, sy=(-v3.y*.5+.5)*innerHeight;
+    if(!h.lw) h.lw=h.el.querySelector('.lbl').offsetWidth;
+    h.el.classList.toggle('flip', sx + 24 + h.lw > innerWidth - (mq.matches?12:240));   // ป้ายชื่อชนขอบขวา/แถบเครื่องมือ ให้ย้ายไปด้านซ้าย
+    h.el.style.transform=`translate(${sx.toFixed(1)}px,${sy.toFixed(1)}px)`;
+  }
+}
+const mq = matchMedia('(max-width:760px)');
+const setCompact = () => document.body.classList.toggle('compact', mq.matches);
+mq.addEventListener?.('change', setCompact); setCompact();
+
+/* ---- เครื่องมือ ---- */
+$('bReset').onclick = () => { if(home) flyTo(fit(home)); closeInfo(); setActiveView([...$('views').children][0]); };
+$('bRot').onclick = e => { controls.autoRotate=!controls.autoRotate; controls.autoRotateSpeed=.6; e.currentTarget.setAttribute('aria-pressed',controls.autoRotate); };
+$('bFull').onclick = () => { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.(); };
+
+/* ---- โหลดโมเดล ---- */
+let model = null;
 const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
 loader.load(CONFIG.model, gltf => {
   model = gltf.scene;
-  model.traverse(o => { if(o.isMesh){ o.frustumCulled = true; const ms=[].concat(o.material);
-    ms.forEach(m=>{ m.metalness=0; m.roughness=1; if(m.map) m.map.anisotropy=4; }); }});
+  model.traverse(o => { if(o.isMesh){ [].concat(o.material).forEach(m=>{ m.metalness=0; m.roughness=1; if(m.map) m.map.anisotropy=4; }); }});
   scene.add(model);
-  const box = new THREE.Box3().setFromObject(model);
-  const size = box.getSize(new THREE.Vector3()); console.log('model size (m)', size.toArray());
   loadViewpoints().then(()=>{
-    home = VPS.find(v=>/Last_Saved|ล่าสุด/.test(v.id||v.label)) || VPS[0] || {position:[-1500,2700,2800],target:[0,0,0]};
-    camera.position.set(...home.position); controls.target.set(...home.target); controls.update();
+    const h0=fit(home); camera.position.set(...h0.position); controls.target.set(...h0.target); controls.update();
+    setActiveView([...$('views').children][0]);
   });
   loadHotspots();
   const l=$('loader'); l.style.opacity=0; setTimeout(()=>l.remove(),450);
@@ -221,8 +309,8 @@ loader.load(CONFIG.model, gltf => {
   showErr('โหลดโมเดลไม่สำเร็จ: เปิดหน้านี้ผ่านเว็บเซิร์ฟเวอร์ (ไม่ใช่ดับเบิลคลิกไฟล์) และตรวจว่ามีไฟล์ model.glb อยู่โฟลเดอร์เดียวกัน'); });
 
 renderer.setAnimationLoop(now => { stepAnim(now); controls.update(); renderer.render(scene,camera); updateHotspots(); });
-window.__ready = () => !!model;
-window.__flyTo = i => { camera.position.set(...VPS[i].position); controls.target.set(...VPS[i].target); controls.update(); };
+window.__ready = () => !!model && HS.length>0;
+window.__select = i => { select(i); anim && (anim.dur=1); };
 </script>
 </body>
 </html>
