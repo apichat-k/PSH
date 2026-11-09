@@ -150,11 +150,11 @@ $('stage').appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xcfe3f1);
 const camera = new THREE.PerspectiveCamera(40, 1, 2, 60000);
-camera.position.set(-420, 3300, 2750);
+camera.position.set(-430, 3550, 3150);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; controls.dampingFactor = .08;
 controls.maxPolarAngle = Math.PI * .495;
-controls.target.set(-420, 950, -80);
+controls.target.set(-430, 950, 180);
 
 scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8a80, 1.6));
 const sun = new THREE.DirectionalLight(0xffffff, 1.4); sun.position.set(-1500, 3000, 1500); scene.add(sun);
@@ -205,7 +205,7 @@ async function loadViewpoints(){
     b.onclick=()=>{ setActiveView(b); flyTo(v.id==='overview'?fit(v):v); closeInfo(); };
     box.appendChild(b); });
   if(!VPS.length) box.style.display='none';
-  home = VPS.find(v=>v.id==='overview') || VPS[0] || {position:[-420,3300,2750],target:[-420,950,-80]};
+  home = VPS.find(v=>v.id==='overview') || VPS[0] || {position:[-430,3550,3150],target:[-430,950,180]};
 }
 function setActiveView(b){ [...$('views').children].forEach(c=>c.classList.toggle('active', c===b)); }
 
@@ -220,7 +220,7 @@ async function loadHotspots(){
     const el=document.createElement('button'); el.className='hs'; el.type='button';
     el.setAttribute('aria-label', h.num+'. '+h.title);
     el.innerHTML='<span class="num"></span><span class="lbl"></span>';
-    el.querySelector('.num').textContent=h.num; el.querySelector('.lbl').textContent=h.num+'. '+h.title;
+    el.querySelector('.num').textContent=h.num; el.querySelector('.lbl').textContent=h.title;   // หมุดแสดงหมายเลขอยู่แล้ว ป้ายจึงแสดงเฉพาะชื่อ
     el.onclick=()=>select(i);
     document.body.appendChild(el); h.el=el;
     const li=document.createElement('li'); const b=document.createElement('button');
